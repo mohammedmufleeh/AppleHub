@@ -58,6 +58,8 @@ html {
 
 article, aside, figcaption, figure, footer, header, hgroup, main, nav, section {
   display: block;
+  
+  
 }
 
 body {
@@ -68,7 +70,7 @@ body {
   line-height: 1.5;
   color: #000000;
   text-align: left;
-  background-color: #fff;
+  background-color: rgb(255, 255, 255);
 }
 
 [tabindex="-1"]:focus {
@@ -4348,7 +4350,7 @@ input[type=button].btn-block {
   flex-direction: column;
   min-width: 0;
   word-wrap: break-word;
-  background-color: rgba(225, 225,225, 0.5);
+  background-color:black;
   background-clip: border-box;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 0.37rem;

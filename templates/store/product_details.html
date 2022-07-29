@@ -67,7 +67,12 @@
             </div>
         </div> <!-- row.// -->
         <hr>
-        <a href="./product-detail.html" class="btn  btn-primary"> <span class="text">Add to cart</span> <i class="fas fa-shopping-cart"></i>  </a>
+        {% if in_cart %}
+        <a href="#" class="btn  btn-dark"> <span class="text">Already in cart</span> <i class="fas fa-check"></i>  </a>
+        <a href="{% url 'cart' %}" class="btn  btn-dark"> <span class="text">view cart</span> <i class="fas fa-eye"></i>  </a>
+        {% else %}
+        <a href="{% url 'add_cart' single_product.id%}" class="btn  btn-primary"> <span class="text">Add to cart</span> <i class="fas fa-shopping-cart"></i>  </a>
+        {% endif %}
     </article> <!-- product-info-aside .// -->
             </main> <!-- col.// -->
         </div> <!-- row.// -->

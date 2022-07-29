@@ -1,10 +1,10 @@
 from multiprocessing import context
 from django.shortcuts import render
-from store.models import product
+from store.models import Product
 
 # Create your views here.
 
 def home(request):
-    products = product.objects.all().filter(is_available=True,is_featured=True)
+    products = Product.objects.all().filter(is_available=True,is_featured=True)
     context = {'products':products}
     return render(request,'index.html',context)
