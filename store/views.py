@@ -2,6 +2,7 @@
 from itertools import product
 from multiprocessing import context
 from django.shortcuts import get_object_or_404, render
+from django.db.models import Q
 
 from cart.models import CartItem
 from .models import Product
@@ -44,3 +45,19 @@ def product_details(request,category_slug,product_slug):
                 
     }
     return render(request,'store/product_details.html',context)
+
+
+def search(request):
+    products = None
+    product_count = 0
+    if 'keyword' in request.GET:
+        keyword = request.GET['keyword']
+        if keyword:
+            products = Product.objects.filter(Q(product_name__icontains=keyword))
+            product_count = products.count()
+
+    context = {
+        'products' : products,
+        'product_count' : product_count
+    }
+    return render(request, 'store/store.html', context)
