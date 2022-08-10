@@ -1,3 +1,4 @@
+from http.client import HTTPResponse
 from multiprocessing import context
 from django.shortcuts import redirect, render
 from django.contrib.auth import login,logout,authenticate
@@ -148,7 +149,67 @@ def signin(request):
                    messages.warning(request, 'Account is not activated. please check your email') 
             else:
                 messages.error(request, 'Email or Password is incorrect') 
-        return render(request,'login.html')    
+        return render(request,'login.html')  
+
+def forgotPassword(request):
+    if request.method =='POST':
+        email = request.POST['email']
+        if Accounts.objects.filter(email=email).exists():
+            user = Accounts.objects.get(email__exact=email)
+
+            current_site = get_current_site(request)
+            mail_subject = "Reset Your Password"
+            message = render_to_string('reset_passwrod.html',{
+                'user' : 'user',
+                'domain' : current_site,
+                'uid' : urlsafe_base64_encode(force_bytes(user.pk)),
+                'token' : default_token_generator.make_token(user)
+
+            })
+
+            to_email = email
+            send_email = EmailMessage(mail_subject,  message, to=[to_email])
+            send_email.send()
+
+            messages.success(request, "Check inbox and reset password.")
+            return redirect('login')
+        else:
+            messages.error(request, 'Account does not exist!')
+            return redirect('forgotPassword')
+    return render(request, 'forgotPassword.html') 
+
+def resetpassword_validate(request, uidb64,token):
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = Accounts._default_manager.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, Accounts.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        request.session['uid'] = uid
+        messages.success(request, 'please reset your password')
+        return redirect('resetPassword')
+
+def resetPassword(request):
+    if request.method == 'POST':
+        password = request.POST['password']
+        confirm_password = request.POST['confirm_password']
+
+        if password == confirm_password:
+            uid = request.session.get('uid')
+            user = Accounts.objects.get(pk=uid)
+            user.set_password(password)
+            user.save()
+            messages.success(request, 'password reset succesful')
+            return redirect('login')
+        else:
+            messages.error(request, 'password do not match!')
+            return redirect('resetPassword')
+    else:
+        return render(request, 'resetPassword.html')
+
+
+
 @never_cache
 def signout(request):
     logout(request)
