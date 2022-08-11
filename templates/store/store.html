@@ -73,7 +73,8 @@
                     <div class="fix-height">
                         <a href="{{product.get_url}}" class="title">{{product.product_name}}</a>
                         <div class="price-wrap mt-2">
-                            <span class="price">{{product.price}}</span>
+                    <var class="price ">₹ {{product.price}}</var> 
+                            {% comment %} <span class="price">{{product.price}}</span> {% endcomment %}
                         </div> <!-- price-wrap.// -->
                     </div>
                     <a href="{{product.get_url}}" class="btn btn-block btn-dark">View Details </a>

@@ -1,7 +1,8 @@
 from django.shortcuts import redirect, render
 from cart.models import CartItem
 from orders.models import Order
-from .models import Payment
+from store.models import Product
+from .models import OrderProduct, Payment
 from .forms import OrderForm
 import datetime
 
@@ -98,11 +99,37 @@ def payment_status(request):
       order.payment = transaction
       order.is_ordered = True
       order.save()
+
+      cart_items = CartItem.objects.filter(user=order.user)
+
+      for item in cart_items:
+        orderproduct = OrderProduct()
+        orderproduct.order_id = order.id
+        orderproduct.Payment = transaction
+        orderproduct.user_id = order.user.id
+        orderproduct.product_id = item.product_id
+        orderproduct.quantity = item.quantity
+        orderproduct.product_price = item.product.price
+        orderproduct.ordered = True
+        orderproduct.save()
+
+        cart_item = CartItem.objects.get(id=item.id)
+        product_variation = cart_item.variation.all()
+        orderproduct = OrderProduct.objects.get(id=orderproduct.id)
+        orderproduct.variation.set(product_variation)
+        orderproduct.save()
+
+        product = Product.objects.get(id=item.product_id)
+        product.stock -= item.quantity
+        product.save() 
+
+      CartItem.objects.filter(user=order.user).delete()
       
       
       return redirect('payment_success')
     
-    except:
+    except Exception as e:
+      raise e
       transaction = Payment.objects.get(order_id=response['razorpay_order_id'])
       transaction.delete()
       return redirect('payment_fail')
@@ -158,7 +185,35 @@ def payment(request, total=0):
   return render(request, 'orders/payments.html', context)
 
 def payment_success(request):
-  return render(request, 'orders/success.html')
+  order_number = request.session['order_number']
+  transation_id = Payment.objects.get(order_number=order_number)
+
+  try:
+    order = Order.objects.get(order_number=order_number,is_ordered=True)
+    ordered_products = OrderProduct.objects.filter(order_id=order.id)
+    tax = 0
+    total = 0
+    grand_total = 0
+
+    for item in ordered_products:
+
+      total += (item.product_price * item.quantity)
+
+    tax = total*2/100
+    grand_total = total + tax
+
+    context = {
+      'order':order,
+      'ordered_products': ordered_products,
+      'transation_id' : transation_id,
+      'total': total,
+      'tax' : tax,
+      'grand_total' : grand_total
+
+    }
+    return render(request, 'orders/success.html',context)
+  except Exception as e:
+    raise e
 
 def payment_fail(request):
   return render(request, 'orders/fail.html')

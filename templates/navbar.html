@@ -51,7 +51,7 @@
                             <div class="widget-header">
                                 <small class="title text-primary font-weight-bold">Welcome {{ request.user}}</small>
                                 <div class= "text-primary"> 
-                                    <a href="/accounts/">Dashboard</a> <span class="dark-transp"> | </span>
+                                    <a href="{% url 'user_dashboard' %}">Dashboard</a> <span class="dark-transp"> | </span>
                                     <a href="/accounts/logout">Signout</a>
                                 </div>
                             </div>

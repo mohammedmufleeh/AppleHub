@@ -4,6 +4,7 @@ from django.shortcuts import redirect, render
 from django.contrib.auth import login,logout,authenticate
 from django.views.decorators.cache import never_cache
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
 from cart.models import Cart, CartItem
 from . models import Accounts
@@ -20,6 +21,9 @@ from django.core.mail import EmailMessage
 import requests
 
 # Create your views here.
+@login_required(login_url='login')
+def user_dashboard(request):
+    return render(request, 'user_dashboard.html')
 
 
 
