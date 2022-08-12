@@ -11,6 +11,7 @@ from . models import Accounts
 from .forms import RegistrationForm
 from cart.views import _cart_id
 from cart.models import Cart,CartItem
+from orders.models import Order, OrderProduct, Payment
 
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
@@ -23,7 +24,71 @@ import requests
 # Create your views here.
 @login_required(login_url='login')
 def user_dashboard(request):
-    return render(request, 'user_dashboard.html')
+    try:
+        current_user = request.user
+        total_orders = Order.objects.filter(user=current_user, is_ordered=True).count()
+        
+        context = {
+        'current_user': current_user,
+        'total_orders': total_orders
+        }
+        
+        return render(request, 'user_dashboard.html', context)
+    
+    except Exception as e:
+        raise e
+@login_required(login_url='login')
+def my_orders(request):
+    current_user = request.user
+    orders = Order.objects.filter(user=current_user,is_ordered=True).order_by('-created_at')
+    context = {
+        'orders': orders,
+    }
+    return render(request, 'my_orders.html',context)
+@login_required(login_url='login')
+def cancel_order(request,order_number):
+    try:
+        order = Order.objects.get(order_number=order_number)
+        order.status = "Cancelled"
+        order.save()
+
+        return redirect('my_orders')
+
+    except Exception as e:
+        raise e
+        
+
+@login_required(login_url='signin')
+def view_order(request, order_number):
+  try:
+    order = Order.objects.get(order_number=order_number)
+    ordered_products = OrderProduct.objects.filter(order_id=order.id)
+    transaction_id = Payment.objects.get(order_number=order_number)
+    
+    tax = 0
+    total = 0
+    grand_total = 0
+    
+    for item in ordered_products:
+      total += (item.product_price * item.quantity)
+      
+    tax = total / 100
+    grand_total = total + tax
+    
+    context = {
+      'order': order,
+      'ordered_products': ordered_products,
+      'transaction_id': transaction_id,
+      
+      'total': total,
+      'tax': tax,
+      'grand_total': grand_total
+    }
+    
+    return render(request, 'orders/view_order.html', context)
+    
+  except Exception as e:
+    raise e
 
 
 
