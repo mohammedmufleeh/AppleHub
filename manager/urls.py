@@ -6,5 +6,23 @@ urlpatterns = [
     path('',views.manager_dashboard,name='manager_dashboard'),
     path('login',views.manager_login,name='manager_login'),
     path('logout',views.manager_logout,name='manager_logout'),
+    path('user_management',views.user_management,name='user_management'),
+    path('category_management',views.category_management,name='category_management'),
+    path('add_category',views.add_category,name='add_category'),
+    path('order_management',views.order_management,name='order_management'),
+    path('product_management',views.product_management,name='product_management'),
+
+
+    path('user_ban/<int:user_id>/',views.user_ban,name='user_ban'),
+    path('user_unban/<int:user_id>/',views.user_unban,name='user_unban'),
+    path('delete_category/<int:category_id>/',views.delete_category,name='delete_category'),
+    path('update_category/<int:category_id>/', views.update_category, name="update_category"),
+    path('cancel_order/<int:order_number>/', views.cancel_order, name='cancel_order'),
+    path('accept_order/<int:order_number>/', views.accept_order, name='accept_order'),
+    path('complete_order/<int:order_number>/', views.complete_order, name='complete_order'),
+    path('delete_product/<int:product_id>/', views.delete_product, name='delete_product'),
+    path('edit_product/<int:product_id>/', views.edit_product, name='edit_product'),
+    path('add_product/', views.add_product, name='add_product'),
+    
     
 ]

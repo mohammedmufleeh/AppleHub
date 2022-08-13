@@ -41,7 +41,7 @@
                     <div class="d-flex justify-content-end mb-3 mb-lg-0">
                         {% if request.user.is_superadmin %}
                         <div class="widget-header">
-                            <small class="title text-primary font-weight-bold">Welcome {{ request.user}}</small>
+                            <small class="title text-dark font-weight-bold">Welcome {{ request.user}}</small>
                             <div class= "text-primary"> 
                                 <a href="/manager/">Dashboard</a> <span class="dark-transp"> | </span>
                                 <a href="/manager/logout">Signout</a>
@@ -49,7 +49,7 @@
                         </div>
                             {% elif request.user.is_authenticated %}
                             <div class="widget-header">
-                                <small class="title text-primary font-weight-bold">Welcome {{ request.user}}</small>
+                                <small class="title text-dark font-weight-bold">Welcome {{ request.user}}</small>
                                 <div class= "text-primary"> 
                                     <a href="{% url 'user_dashboard' %}">Dashboard</a> <span class="dark-transp"> | </span>
                                     <a href="/accounts/logout">Signout</a>

@@ -1,17 +1,231 @@
+from multiprocessing import context
 from django.shortcuts import redirect, render
 from django.contrib.auth import login,logout,authenticate
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from django.contrib import messages
 
+from accounts.models import Accounts
+from store.models import Product
+from orders.models import Order
+from category.models import category
+from .forms import ProductForm
+
+
 # Create your views here.
 @never_cache
 @login_required(login_url='manager_login')
 def manager_dashboard(request):
     if request.user.is_superadmin:
-        return render(request,'manager_dashboard.html')
+
+        user_count = Accounts.objects.filter(is_superadmin=False).count()
+        product_count = Product.objects.all().count()
+        order_count = Order.objects.filter(is_ordered=True).count()
+        category_count = category.objects.all().count
+
+        context = {
+            'user_count': user_count,
+            'product_count': product_count,
+            'order_count' : order_count,
+            'category_count' : category_count
+        }
+
+        return render(request,'manager/manager_dashboard.html',context)
     else:
         return redirect('home')
+
+@never_cache
+@login_required(login_url='manager_login')
+def user_management(request):
+    users = Accounts.objects.filter(is_superadmin=False).order_by('id')
+    context = {
+        'users' : users
+    }
+    return render(request, 'manager/user_management.html',context)
+
+
+def user_ban(request, user_id):
+    user = Accounts.objects.get(id=user_id)
+    user.is_active = False
+    user.save()
+    return redirect('user_management')
+
+def user_unban(request, user_id):
+    user = Accounts.objects.get(id=user_id)
+    user.is_active = True
+    user.save()
+    return redirect('user_management')
+
+
+def category_management(request):
+    categories = category.objects.all().order_by('id')
+
+    context = {
+        'categories' :categories
+    }
+
+    return render(request, 'manager/category_management.html',context)
+
+
+def add_category(request):
+    if request.method == 'POST':
+        try:
+            category_name = request.POST['category_name']
+            category_slug = request.POST['category_slug']
+            category_description = request.POST['category_description']
+            
+            categories = category(
+                category_name = category_name,
+                slug = category_slug,
+                description = category_description
+            )
+            
+            categories.save()
+            return redirect('category_management')
+        except Exception as e:
+            raise e
+    return render(request, 'manager/add_category.html')
+
+# Update Category
+@never_cache
+@login_required(login_url='manager_login')
+def update_category(request, category_id):
+  try:
+    categories = category.objects.get(id=category_id)
+    
+    if request.method == 'POST':
+      category_name = request.POST['category_name']
+      category_slug = request.POST['category_slug']
+      category_description = request.POST['category_description']
+      
+      categories.category_name = category_name
+      categories.slug = category_slug
+      categories.description = category_description
+      categories.save()
+      
+      return redirect('category_management')
+    
+    context = {
+      'category': categories
+    }
+    return render(request, 'manager/update_category.html', context)
+    
+  except Exception as e:
+    raise e
+    
+       
+
+@never_cache
+@login_required(login_url='manager_login')
+def delete_category(request,category_id):
+    categories = category.objects.get(id=category_id)
+    categories.delete()
+
+    return redirect('category_management')
+
+
+# Manage Order
+@never_cache
+@login_required(login_url='manager_login')
+def order_management(request):
+  orders = Order.objects.filter(is_ordered=True).order_by('id')
+  
+  
+  context = {
+    'orders': orders
+  }
+  return render(request, 'manager/order_management.html', context)
+
+# Cancel Order
+@never_cache
+@login_required(login_url='manager_login')
+def cancel_order(request, order_number):
+  order = Order.objects.get(order_number=order_number)
+  order.status = 'Cancelled'
+  order.save()
+  
+  return redirect('order_management')
+  
+
+# Accept Order
+@never_cache
+@login_required(login_url='manager_login')
+def accept_order(request, order_number):
+  order = Order.objects.get(order_number=order_number)
+  order.status = 'Accepted'
+  order.save()
+  
+  return redirect('order_management')
+
+# Complete Order
+@never_cache
+@login_required(login_url='manager_login')
+def complete_order(request, order_number):
+  order = Order.objects.get(order_number=order_number)
+  order.status = 'Completed'
+  order.save()
+  
+  return redirect('order_management')
+
+  # Product Management
+@never_cache
+@login_required(login_url='manager_login')
+def product_management(request):
+  products = Product.objects.all().order_by('id')
+  
+  context = {
+    'products': products
+  }
+  return render(request, 'manager/product_management.html', context)
+
+# Add Product
+@never_cache
+@login_required(login_url='manager_login')
+def add_product(request):
+  if request.method == 'POST':
+    form = ProductForm(request.POST, request.FILES)
+    if form.is_valid():
+        form.save()
+        return redirect('product_management')
+  else:
+    form = ProductForm()
+    context = {
+      'form': form
+    }
+    return render(request, 'manager/add_product.html', context)
+
+# Edit Product
+@never_cache
+@login_required(login_url='manager_login')
+def edit_product(request, product_id):
+  product = Product.objects.get(id=product_id)
+  form = ProductForm(instance=product)
+  
+  if request.method == 'POST':
+    try:
+      form = ProductForm(request.POST, request.FILES, instance=product)
+      if form.is_valid():
+        form.save()
+        
+        return redirect('product_management')
+    
+    except Exception as e:
+      raise e
+
+  context = {
+    'product': product,
+    'form': form
+  }
+  return render(request, 'manager/edit_product.html', context)
+
+# Delete Product
+@never_cache
+@login_required(login_url='manager_login')
+def delete_product(request, product_id):
+  product = Product.objects.get(id=product_id)
+  product.delete()
+  return redirect('product_management')
+
 @never_cache
 def manager_login(request):
     if request.user.is_authenticated:
@@ -33,7 +247,7 @@ def manager_login(request):
                      messages.error(request, 'This is not a admin account')      
             else:
                 messages.error(request, 'Email or Password is incorrect')
-    return render(request,'admin_login.html')
+    return render(request,'manager/admin_login.html')
 @never_cache
 def manager_logout(request):
     logout(request)

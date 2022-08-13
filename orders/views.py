@@ -147,7 +147,7 @@ def payment(request, total=0):
   for item in cart_item:
     total += (item.product.price * item.quantity)
     
-  tax = (1 * total) / 100
+  tax = (2 * total) / 100
   grand_total = total + tax
   
   order_number = request.session['order_number']

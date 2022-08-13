@@ -72,7 +72,7 @@ def view_order(request, order_number):
     for item in ordered_products:
       total += (item.product_price * item.quantity)
       
-    tax = total / 100
+    tax = 2*total / 100
     grand_total = total + tax
     
     context = {
