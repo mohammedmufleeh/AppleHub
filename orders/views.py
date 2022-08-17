@@ -8,6 +8,7 @@ import datetime
 
 from django.contrib.auth.decorators import login_required
 from django.template.loader import render_to_string
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
 
 import razorpay
@@ -129,11 +130,12 @@ def payment_status(request):
         # clear cart
       CartItem.objects.filter(user=order.user).delete()
 
-
+      current_site = get_current_site(request)
       mail_subject = "Thank you for order!"
       message = render_to_string('orders/order_recieved_email.html',{
           'user' : order.user,
           'order' : order,
+          'domain' : current_site,
           
       })
 

@@ -4,6 +4,6 @@
 Hi.. {{user.username}}
 
 YOUR ORDER HAS BEEN RECIEVED!
-{{order.order_number}}
+http://{{domain}}{% url 'view_order' order.order_number  %}
 
 {% endautoescape %}
