@@ -7,6 +7,8 @@ from .forms import OrderForm
 import datetime
 
 from django.contrib.auth.decorators import login_required
+from django.template.loader import render_to_string
+from django.core.mail import EmailMessage
 
 import razorpay
 from django.conf import settings
@@ -119,11 +121,25 @@ def payment_status(request):
         orderproduct.variation.set(product_variation)
         orderproduct.save()
 
+        # reduce the quantity of sold product
         product = Product.objects.get(id=item.product_id)
         product.stock -= item.quantity
         product.save() 
 
+        # clear cart
       CartItem.objects.filter(user=order.user).delete()
+
+
+      mail_subject = "Thank you for order!"
+      message = render_to_string('orders/order_recieved_email.html',{
+          'user' : order.user,
+          'order' : order,
+          
+      })
+
+      to_email = request.user.email
+      send_email = EmailMessage(mail_subject,  message, to=[to_email])
+      send_email.send()
       
       
       return redirect('payment_success')
@@ -150,7 +166,7 @@ def payment(request, total=0):
   tax = (2 * total) / 100
   grand_total = total + tax
   
-  order_number = request.session['order_number']
+  order_number = request.session['order_number'] 
   
   order = Order.objects.get(user=current_user, is_ordered=False, order_number=order_number)
   
