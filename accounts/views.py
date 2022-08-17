@@ -1,10 +1,11 @@
-from http.client import HTTPResponse
-from multiprocessing import context
+
 from django.shortcuts import redirect, render
 from django.contrib.auth import login,logout,authenticate
 from django.views.decorators.cache import never_cache
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import check_password, make_password
+from django.db.models import Q
 
 from cart.models import Cart, CartItem
 from . models import Accounts
@@ -33,18 +34,23 @@ def user_dashboard(request):
         'total_orders': total_orders
         }
         
-        return render(request, 'user_dashboard.html', context)
+        return render(request, 'accounts/user_dashboard.html', context)
     
     except Exception as e:
         raise e
 @login_required(login_url='login')
 def my_orders(request):
-    current_user = request.user
-    orders = Order.objects.filter(user=current_user,is_ordered=True).order_by('-created_at')
+    if request.method =="POST":
+        current_user = request.user
+        key = request.POST['key']
+        orders = Order.objects.filter(Q(user=current_user), Q(order_number__startswith=key) | Q(first_name__startswith=key) | Q(last_name__startswith=key) | Q(phone__startswith=key)).order_by('-id')
+    else:
+        current_user=request.user
+        orders = Order.objects.filter(user=current_user,is_ordered=True).order_by('-created_at')
     context = {
         'orders': orders,
     }
-    return render(request, 'my_orders.html',context)
+    return render(request, 'accounts/my_orders.html',context)
 @login_required(login_url='login')
 def cancel_order(request,order_number):
     try:
@@ -90,6 +96,30 @@ def view_order(request, order_number):
   except Exception as e:
     raise e
 
+@never_cache
+@login_required(login_url='signin')
+def change_password(request):
+  if request.method == 'POST':
+    current_user = request.user
+    current_password = request.POST['current_password']
+    password = request.POST['password']
+    confirm_password = request.POST['confirm_password']
+    
+    if password == confirm_password:
+      if check_password(current_password, current_user.password):
+        if check_password(password, current_user.password):
+          messages.warning(request, 'Current password and new password is same')
+        else:
+          hashed_password = make_password(password)
+          current_user.password = hashed_password
+          current_user.save()
+          messages.success(request, 'Password changed successfully')
+      else:
+        messages.error(request, 'Wrong password')
+    else:
+      messages.error(request, 'Passwords does not match')
+  
+  return render(request, 'accounts/change_password.html')
 
 
 def signup(request):
@@ -117,8 +147,8 @@ def signup(request):
 
                 current_site = get_current_site(request)
                 mail_subject = "Please activate your account"
-                message = render_to_string('email_verification.html',{
-                    'user' : 'user',
+                message = render_to_string('accounts/email_verification.html',{
+                    'user' : user,
                     'domain' : current_site,
                     'uid' : urlsafe_base64_encode(force_bytes(user.pk)),
                     'token' : default_token_generator.make_token(user)
@@ -134,7 +164,7 @@ def signup(request):
                 return redirect('login')
         
         context = {'form' : form}
-        return render(request,'signup.html',context) 
+        return render(request,'accounts/signup.html',context) 
         
          
 def activate(request, uidb64, token):
@@ -218,7 +248,7 @@ def signin(request):
                    messages.warning(request, 'Account is not activated. please check your email') 
             else:
                 messages.error(request, 'Email or Password is incorrect') 
-        return render(request,'login.html')  
+        return render(request, 'accounts/login.html')  
 
 def forgotPassword(request):
     if request.method =='POST':
@@ -228,8 +258,8 @@ def forgotPassword(request):
 
             current_site = get_current_site(request)
             mail_subject = "Reset Your Password"
-            message = render_to_string('reset_passwrod.html',{
-                'user' : 'user',
+            message = render_to_string('accounts/reset_passwrod.html',{
+                'user' : user,
                 'domain' : current_site,
                 'uid' : urlsafe_base64_encode(force_bytes(user.pk)),
                 'token' : default_token_generator.make_token(user)
@@ -245,7 +275,7 @@ def forgotPassword(request):
         else:
             messages.error(request, 'Account does not exist!')
             return redirect('forgotPassword')
-    return render(request, 'forgotPassword.html') 
+    return render(request, 'accounts/forgotPassword.html') 
 
 def resetpassword_validate(request, uidb64,token):
     try:
@@ -275,7 +305,7 @@ def resetPassword(request):
             messages.error(request, 'password do not match!')
             return redirect('resetPassword')
     else:
-        return render(request, 'resetPassword.html')
+        return render(request, 'accounts/resetPassword.html')
 
 
 

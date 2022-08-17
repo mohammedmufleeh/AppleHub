@@ -12,12 +12,29 @@
             <a class="list-group-item btn btn-outline-dark" href="{% url 'product_management' %}"> Product Management </a>
             <a class="list-group-item btn btn-outline-dark active" href="{% url 'order_management' %}"> Order Management </a>
             <a class="list-group-item btn btn-outline-dark " href="{% url 'category_management' %}"> Category Management </a>
+            <a class="list-group-item btn btn-outline-dark" href="{% url 'variation_management' %}"> Variation Management </a>
+            <a class="list-group-item btn btn-outline-dark" href="{% url 'admin_orders' %}"> My Orders </a>
+            <a class="list-group-item btn btn-outline-dark" href="{% url 'admin_change_password' %}"> Change Password </a>
         </ul>
         <br />
         <a class="btn btn-dark btn-block" href="{% url 'manager_logout' %}"> <i class="fa fa-power-off"></i> <span class="text">Log out</span> </a>
         <!--   SIDEBAR .//END   -->
       </aside>
       <main class="col-md-9">
+        <div class= " d-flex justify-content-end">
+        <form action="" class="search" method="POST" >
+          {% csrf_token %}
+          <div class="mb-3">
+            <div class="input-group  ">
+              <input type="text" id="form1" class="form-control" placeholder = "search" name = "key" />
+              
+            <button class="btn btn-dark" type="submit">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+          </div>
+        </form>
+      </div>
         <table class="table table-dark">
           <thead>
             <tr>
