@@ -174,7 +174,7 @@ def order_management(request):
 # Cancel Order
 @never_cache
 @login_required(login_url='manager_login')
-def cancel_order(request, order_number):
+def manager_cancel_order(request, order_number):
   order = Order.objects.get(order_number=order_number)
   order.status = 'Cancelled'
   order.save()
